@@ -1,0 +1,16 @@
+-A List of Strings to Uppercase: 
+	List<String> alpha = Arrays.asList("a", "b", "c", "d");
+	List<String> collect = alpha.stream().map(String::toUpperCase).collect(Collectors.toList());
+
+
+- List number * 2:
+	List<Integer> num = Arrays.asList(1,2,3,4,5);
+	List<Integer> collect1 = num.stream().map(n -> n * 2).collect(Collectors.toList());
+
+- List Object -> List String
+	List<Staff> staff = Arrays.asList(
+                new Staff("mkyong", 30, new BigDecimal(10000)),
+                new Staff("jack", 27, new BigDecimal(20000)),
+                new Staff("lawrence", 33, new BigDecimal(30000))
+        );
+    List<String> collect = staff.stream().map(x -> x.getName()).collect(Collectors.toList());
