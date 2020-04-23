@@ -1,0 +1,12 @@
+-Create a New Workspace: 
+		npx create-nx-workspace@latest <name>
+
+-Create an Angular Application:
+		ng g @nrwl/angular:application <name>
+
+- Create lib: ng g library <name>
+
+- Create component: ng g component <name> 
+
+- Run application:
+		ng serve

@@ -1,0 +1,4 @@
+- generate redux structure 
+ng g @nrwl/angular:ngrx hotel --module=libs/meta/src/lib/hotel/hotel.module.ts --directory +state
+
+------------------------------------------------------------------------------------------------

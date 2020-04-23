@@ -1,0 +1,53 @@
+- Lifecycle Hooks:
+	+ A component has a lifecycle managed by Angular.
+	+ Angular creates and renders components along with their children, checks when their data-bound properties change, and destroys them before removing them from the DOM.
+	+ Angular offers lifecycle hooks that provide visibility into these key life moments and the ability to act when they occur.
+	+ A directive has the same set of lifecycle hooks.
+------------------------------------------------------------------------------------------------------------------------------
+- ngOnInit: Initialize the directive/component after Angular first displays the data-bound properties and sets the directive/component's input properties. Called once, after the first ngOnChanges().
+------------------------------------------------------------------------------------------------------------------------------
+- ngOnDestroy: A lifecycle hook that is called when a directive, pipe, or service is destroyed. Use for any custom cleanup that needs to occur when the instance is destroyed.
+------------------------------------------------------------------------------------------------------------------------------
+- Imagine that component A is rendered in a tab - You click a button to send a 'GET' request out. It takes 200 ms for the response to come back. So, you are safe to close the tab at any moment knowing that, the machine will be faster than you & the http response is processed and is complete before the tab is closed and component A is destroyed.
+
+How about on a very slow network? You click a button, the 'GET' request takes 10 seconds to receive its response, but 5 seconds into waiting you decide to close the tab. That will destroy component A to be garbage-collected at a later time. Wait a minute!, we did not unsubscribe -- now 5 seconds later, a response comes back and the logic in the destroyed component will be execute. That execution is now considered out-of-context and can result in many things including very low performance.
+
+So, best practice is to use takeUntil() and unsubscribe from http calls when the component is destroyed.
+
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+interface User {
+  id: string;
+  name: string;
+  age: number;
+}
+
+@Component({
+  selector: 'app-foobar',
+  templateUrl: './foobar.component.html',
+  styleUrls: ['./foobar.component.scss'],
+})
+export class FoobarComponent implements OnInit, OnDestroy {
+  private user: User = null;
+  private destroy$ = new Subject();
+
+  constructor(private http: HttpClient) {}
+
+  ngOnInit() {
+    this.http
+      .get<User>('api/user/id')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        this.user = user;
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();  // trigger the unsubscribe
+    this.destroy$.complete(); // finalize & clean up the subject stream
+  }
+}

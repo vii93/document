@@ -1,0 +1,154 @@
+ Providing our component as a MatFormFieldControl
+
+@Component({
+  ...
+  providers: [{provide: MatFormFieldControl, useExisting: MyTelInput}],
+})
+class MyTelInput implements MatFormFieldControl<MyTel> {
+  ...
+}
+
+---------------------------------------------------------
+Implementing the method and properties of MatFormFieldControl
+
+* value
+
+@Input()
+  get value(): MyTel | null {
+    let n = this.parts.value;
+    if (n.area.length == 3 && n.exchange.length == 3 && n.subscriber.length == 4) {
+      return new MyTel(n.area, n.exchange, n.subscriber);
+    }
+    return null;
+  }
+  set value(tel: MyTel | null) {
+    tel = tel || new MyTel('', '', '');
+    this.parts.setValue({area: tel.area, exchange: tel.exchange, subscriber: tel.subscriber});
+  }
+
+* stateChanges
+
+stateChanges = new Subject<void>();
+
+set value(tel: MyTel | null) {
+  ...
+  this.stateChanges.next();
+}
+
+ngOnDestroy() {
+  this.stateChanges.complete();
+}
+
+* id
+
+static nextId = 0;
+
+@HostBinding() id = `example-tel-input-${MyTelInput.nextId++}`;
+
+* placeholder
+
+@Input()
+get placeholder() {
+  return this._placeholder;
+}
+set placeholder(plh) {
+  this._placeholder = plh;
+  this.stateChanges.next();
+}
+private _placeholder: string;
+
+* ngControl
+
+ngControl: NgControl = null;
+constructor(
+  ...,
+  @Optional() @Self() public ngControl: NgControl,
+  ...,
+) { }
+
+* focused
+
+focused = false;
+
+constructor(fb: FormBuilder, private fm: FocusMonitor, private elRef: ElementRef<HTMLElement>) {
+  ...
+  fm.monitor(elRef.nativeElement, true).subscribe(origin => {
+    this.focused = !!origin;
+    this.stateChanges.next();
+  });
+}
+
+ngOnDestroy() {
+  ...
+  this.fm.stopMonitoring(this.elRef.nativeElement);
+}
+
+* empty
+
+get empty() {
+  let n = this.parts.value;
+  return !n.area && !n.exchange && !n.subscriber;
+}
+
+* shouldLabelFloat
+
+@HostBinding('class.floating')
+get shouldLabelFloat() {
+  return this.focused || !this.empty;
+}
+
+span {
+  opacity: 0;
+  transition: opacity 200ms;
+}
+:host.floating span {
+  opacity: 1;
+}
+
+* required
+
+@Input()
+get required() {
+  return this._required;
+}
+set required(req) {
+  this._required = coerceBooleanProperty(req);
+  this.stateChanges.next();
+}
+private _required = false;
+
+* disabled
+
+@Input()
+get disabled(): boolean { return this._disabled; }
+set disabled(value: boolean) {
+  this._disabled = coerceBooleanProperty(value);
+  this._disabled ? this.parts.disable() : this.parts.enable();
+  this.stateChanges.next();
+}
+private _disabled = false;
+
+* errorState
+
+errorState = false;
+
+* controlType
+
+controlType = 'example-tel-input';
+
+
+* setDescribedByIds(ids: string[])
+
+@HostBinding('attr.aria-describedby') describedBy = '';
+
+setDescribedByIds(ids: string[]) {
+  this.describedBy = ids.join(' ');
+}
+
+* onContainerClick(event: MouseEvent)
+
+onContainerClick(event: MouseEvent) {
+  if ((event.target as Element).tagName.toLowerCase() != 'input') {
+    this.elRef.nativeElement.querySelector('input').focus();
+  }
+}
